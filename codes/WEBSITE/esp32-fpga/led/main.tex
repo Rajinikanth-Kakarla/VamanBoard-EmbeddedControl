@@ -1,0 +1,83 @@
+\subsection{Onboard LED}
+This subsection illustrates the use of SPI Communication between the Vaman-ESP32
+and the FPGA onboard the Vaman-Pygmy by toggling the LEDs onboard the
+Vaman-Pygmy.
+
+\subsubsection{Components}
+The components required are listed in \autoref{tab:esp32-fpga-led-components}.
+\begin{table}[!ht]
+    \centering
+    \input{inter-chip/esp32-fpga/led/tables/components.tex}
+    \caption{Components Required for Controlling the Onboard LED via SPI.}
+    \label{tab:esp32-fpga-led-components}
+\end{table}
+
+\subsubsection{Connections}
+The connections to be made on the Vaman board are listed in
+\autoref{tab:esp32-fpga-led-connections}.
+\begin{table}[!ht]
+    \centering
+    \input{inter-chip/esp32-fpga/led/tables/connections.tex}
+    \caption{Connections to Establish SPI between Vaman-ESP32 and Vaman-Pygmy.}
+    \label{tab:esp32-fpga-led-connections}
+\end{table}
+
+\subsubsection{Building}
+\begin{enumerate}
+    \item Build the PlatformIO project at
+    \begin{lstlisting}
+inter-chip/esp32-fpga/led/codes/esp32
+    \end{lstlisting}
+    \item Flash the project .bin file using USB-UART connected to the 
+    Vaman-ESP32, via PlatformIO or ArduinoDroid.
+    \item Build the FPGA project .bin file by entering the following commands at
+    a terminal window.
+    \begin{lstlisting}
+# The following variable can be sourced from .shellrc or .venv/bin/activate
+export QORC_SDK_PATH=/path/to/pygmy-sdk
+cd inter-chip/esp32-fpga/led/codes/fpga
+make
+    \end{lstlisting}
+    \item On building successfully, the .bin file is generated at
+    \begin{lstlisting}
+inter-chip/esp32-fpga/led/codes/fpga/rtl/AL4S3B_FPGA_Top.bin
+    \end{lstlisting}
+    \item Flash the .bin file to the Vaman-Pygmy by resetting it to bootloader
+    mode and entering the following command at a terminal window,
+    \begin{lstlisting}
+python3 /path/to/tinyfpga-programmer-gui.py --port /dev/ttyACMxx --mode fpga --appfpga /path/to/AL4S3B_FPGA_Top.bin --reset
+    \end{lstlisting}
+    where /dev/ttyACMxx is the port at which the Vaman board is available. This
+    can be obtained by inspecting the output of the following command (requires
+    root/sudo privileges).
+    \begin{lstlisting}
+dmesg -w
+    \end{lstlisting}
+\end{enumerate}
+
+\subsubsection{Demonstration}
+\begin{enumerate}[resume]
+    \item Find the IP address of the Vaman-ESP32 by inspecting the output of the
+    serial terminal, or by typing at a terminal window
+    \begin{lstlisting}
+ifconfig
+nmap -sn xx.yy.zz.0/24
+    \end{lstlisting}
+    where xx.yy.zz represents the first three octets of the IP address of your
+    device on the WiFi network interface, found using \texttt{ifconfig}.
+    \item Then, go to the following website and interact with the radio buttons
+    to toggle the LEDs onboard the Vaman-Pygmy. 
+    \begin{lstlisting}
+http://<VAMAN-IP>/led
+    \end{lstlisting}
+\end{enumerate}
+
+\subsubsection{Exercises}
+\begin{enumerate}[resume]
+    \item Modify the ESP32 code to have three separate radio buttons for each
+    onboard LED.
+    \item Modify the ESP32 code to blink the LED periodically when the user
+    toggles a checkbox on the HTML form.
+    \item SPI transactions are a bottleneck in execution. Minimize the number of
+    SPI transactions and the amount of data transmitted in each of them.
+\end{enumerate}

@@ -1,0 +1,99 @@
+\section{UGV}
+This section illustrates the use of SPI Communication between the Vaman-ESP32
+and the Vaman-Pygmy in adjusting the speed of the UGV.
+
+\subsection{Components}
+The components required are listed in \autoref{tab:pwm-ugv-components}.
+\begin{table}[!ht]
+    \centering
+    \input{pwm/ugv/tables/components.tex}
+    \caption{Components Required for Controlling the UGV PWM via SPI.}
+    \label{tab:pwm-ugv-components}
+\end{table}
+
+\subsection{Connections}
+
+\begin{table}[!ht]
+    \centering
+    \input{pwm/ugv/tables/connections.tex}
+    \caption{Connections to establish SPI between Vaman-ESP32 and Vaman-Pygmy.}
+    \label{tab:pwm-ugv-connections}
+\end{table}
+
+\subsection{Building}
+\begin{enumerate}
+    \item Build the PlatformIO project at
+    \begin{lstlisting}
+pwm/ugv/codes/esp32
+    \end{lstlisting}
+    \item Flash the project .bin file using USB-UART connected to the 
+    Vaman-ESP32, via PlatformIO or ArduinoDroid.
+    \item Build the FPGA project .bin file by entering the following commands at
+    a terminal window.
+    \begin{lstlisting}
+# The following variable can be sourced from .shellrc or .venv/bin/activate
+export QORC_SDK_PATH=/path/to/pygmy-sdk
+cd pwm/ugv/codes/fpga
+make
+    \end{lstlisting}
+    \item On building successfully, the file
+    \begin{lstlisting}
+pwm/ugv/codes/fpga/rtl/AL4S3B_FPGA_Top.bin
+    \end{lstlisting}
+    is generated.
+    \item Edit the variable PROJ\_ROOT in
+    \begin{lstlisting}
+pwm/ugv/codes/m4/GCC_Project/config.mk
+    \end{lstlisting}
+    to point to the location of the pygmy-sdk folder on your system.
+    \item Build the M4 project .bin file by entering the following commands at a
+    terminal window.
+    \begin{lstlisting}
+cd pwm/ugv/codes/m4/GCC_Project
+make -j4
+    \end{lstlisting}
+    \item Flash both FPGA and M4 .bin files to the Vaman-Pygmy by resetting it
+    to bootloader mode and entering the following command at a terminal window.
+    \begin{lstlisting}
+python3 /path/to/tinyfpga-programmer-gui.py --port /dev/ttyACMxx --mode m4-fpga --m4app /path/to/m4.bin --appfpga /path/to/AL4S3B_FPGA_Top.bin --reset
+    \end{lstlisting}
+    where /dev/ttyACMxx is the port at which the Vaman board is available. This
+    can be obtained by inspecting the output of the following command (requires
+    root/sudo privileges).
+    \begin{lstlisting}
+dmesg -w
+    \end{lstlisting}
+\end{enumerate}
+
+\subsection{Demonstration}
+\begin{enumerate}[resume]
+    \item Find the IP address of the Vaman-ESP32 by inspecting the output of the
+    serial terminal, or by typing at a terminal window
+    \begin{lstlisting}
+ifconfig
+nmap -sn xx.yy.zz.0/24
+    \end{lstlisting}
+    where xx.yy.zz represents the first three octets of the IP address of your
+    device on the WiFi network interface, found using \texttt{ifconfig}.
+    \item Then, go to the site 
+    \begin{lstlisting}
+http://<VAMAN-IP>/pwm 
+    \end{lstlisting}
+    and enter the PWM value, which is an integer between 0 and 255.
+    \item On entering the value, the speed of the UGV will change according to
+    the PWM value.
+\end{enumerate}
+
+\subsection{Exercises}
+\begin{enumerate}[resume]
+    \item Introduce a slow accelerating motion in the UGV by stepping up the
+    PWM. Take user inputs for starting PWM and step size. Additionally, you can
+    also let the user control whether the PWM will step-up (accelerate) or
+    step-down (decelerate).
+    \item Modify the Verilog code to have four separate PWMs available, and
+    connect the motor pins to each PWM. Also, rewrite the M4 code for
+    facilitating the use of these four PWMs.
+    \item Avoid using the M4 platform entirely, by writing directly to the
+    correct memory locations from the Vaman-ESP32 using SPI. This will improve
+    the latency in the autonomous vehicle system.
+\end{enumerate}
